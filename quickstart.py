@@ -13,9 +13,7 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 
 
 def main():
-    """Shows basic usage of the Gmail API.
-    Lists the user's Gmail labels.
-    """
+
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
@@ -41,27 +39,41 @@ def main():
         results = service.users().labels().get(userId='me', id='UNREAD').execute()
         label_to_get = results.get('messagesTotal')
         labelIDs = ['UNREAD']
-        messages = service.users().messages().list(userId='me', q='in:inbox is:unread', pageToken=3).execute()
-        count = 0
-        for title in messages['messages']:
-            for message in title.values():
-                if count % 2 != 1:
-                    print("userID\t\t  ThreadID")
-                    print(message, end="  ")
-                else:
-                    print(message, "\n")
-                count += 1
+        messages = service.users().messages().list(userId='me', q='in:inbox is:unread', pageToken='2').execute()
         
-        message_to_see = '185eece79311f3e8'
-        
-        specific_message = service.users().messages().get(userId='me', id=message_to_see).execute()
-        print(specific_message)
-        # if not labels:
-        #     print('No labels found.')
-        #     return
-        # print('Labels:')
-        # for label in labels:
-        #     print(label, "\n")
+        # for at vise alle userIDs
+        # count = 0
+        # for title in messages['messages']:
+        #     for message in title.values():
+        #         if count % 2 != 1:
+        #             print("userID\t\t  ThreadID")
+        #             print(message, end="  ")
+        #         else:
+        #             print(message, "\n")
+        #         count += 1
+
+        # ------ tælle hvor mange sider der er -------
+        # main_page = service.users().messages().list(userId='me', q='in:inbox is:unread', maxResults=500).execute()
+        # next_page_token = main_page.get('nextPageToken')
+        # next_page = service.users().messages().list(userId='me', q='in:inbox is:unread', maxResults=500, pageToken=next_page_token).execute()
+        # count = 0
+        # while True: 
+        #     if not next_page_token:
+        #         break
+        #     main_page = next_page
+        #     next_page_token = main_page['nextPageToken']
+        #     next_page = service.users().messages().list(userId='me', q='in:inbox is:unread', pageToken=next_page_token).execute()
+        #     if 'nextPageToken' not in next_page:
+        #         break
+        #     count += 1
+        # print(count)
+
+        # -------- kigge på en besked ------
+        # message_to_remove = messages['messages'][1]['id']
+        # print(message_to_remove)
+        # specific_message = service.users().messages().get(userId='me', id=message_to_remove).execute()
+        # print(specific_message['snippet'])
+
 
     except HttpError as error:
         # TODO(developer) - Handle errors from gmail API.
