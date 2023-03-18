@@ -9,7 +9,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
+SCOPES = ['https://mail.google.com/']
 
 
 def main():
@@ -35,34 +35,46 @@ def main():
     try:
         # Call the Gmail API
         service = build('gmail', 'v1', credentials=creds)
-        
-        results = service.users().labels().get(userId='me', id='UNREAD').execute()
-        label_to_get = results.get('messagesTotal')
-        labelIDs = ['UNREAD']
-        messages = service.users().messages().list(userId='me', q='in:inbox is:unread', pageToken='2').execute()
-        
-        # for at vise alle userIDs
+
+        # # Viser labels
+        # request = service.users().labels().list(userId='me').execute()
+        # for label in request['labels']:
+        #     print(label['id'])
+
+        number_of_mails = 100 # max 500
+        # Makes sure you don't delete new mails
+        main_page = service.users().messages().list(userId='me', q='label:unread', maxResults=number_of_mails).execute()
+        next_page_token = main_page.get('nextPageToken')
+        next_page = service.users().messages().list(userId='me', q='label:unread', maxResults=number_of_mails, pageToken=next_page_token).execute()
+
+        message_Ids = []
+        for i in range(number_of_mails):
+            message_Ids.append(str(next_page['messages'][i]['id']))
+
+        batch = service.users().messages().batchDelete(userId='me', body={'ids': message_Ids}).execute()
+        request = service.users().history().list(userId='me').execute
+        history = request
+
+
+        ## for at vise alle userIDs
         # count = 0
-        # for title in messages['messages']:
-        #     for message in title.values():
-        #         if count % 2 != 1:
-        #             print("userID\t\t  ThreadID")
-        #             print(message, end="  ")
-        #         else:
-        #             print(message, "\n")
-        #         count += 1
+        # for i in range(number_of_mails):
+        #     print("{i} user id: ".format(i=i+1) + messages['messages'][i]['id'])
+        #     count += 1
+        # print(count)
+
 
         # ------ tælle hvor mange sider der er -------
-        # main_page = service.users().messages().list(userId='me', q='in:inbox is:unread', maxResults=500).execute()
+        # main_page = service.users().messages().list(userId='me', q='label:unread', maxResults=500).execute()
         # next_page_token = main_page.get('nextPageToken')
-        # next_page = service.users().messages().list(userId='me', q='in:inbox is:unread', maxResults=500, pageToken=next_page_token).execute()
+        # next_page = service.users().messages().list(userId='me', q='label:unread', maxResults=500, pageToken=next_page_token).execute()
         # count = 0
         # while True: 
         #     if not next_page_token:
         #         break
         #     main_page = next_page
         #     next_page_token = main_page['nextPageToken']
-        #     next_page = service.users().messages().list(userId='me', q='in:inbox is:unread', pageToken=next_page_token).execute()
+        #     next_page = service.users().messages().list(userId='me', q='label:unread', pageToken=next_page_token).execute()
         #     if 'nextPageToken' not in next_page:
         #         break
         #     count += 1
