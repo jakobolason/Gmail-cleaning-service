@@ -43,26 +43,41 @@ def main():
 
         number_of_mails = 100 # max 500
         # Makes sure you don't delete new mails
-        main_page = service.users().messages().list(userId='me', q='label:unread', maxResults=number_of_mails).execute()
+        main_page = service.users().messages().list(userId='me', 
+                                                    q='label:unread', 
+                                                    maxResults=number_of_mails).execute()
         next_page_token = main_page.get('nextPageToken')
-        next_page = service.users().messages().list(userId='me', q='label:unread', maxResults=number_of_mails, pageToken=next_page_token).execute()
+        next_page = service.users().messages().list(userId='me', 
+                                                    q='label:unread', 
+                                                    maxResults=number_of_mails, 
+                                                    pageToken=next_page_token).execute()
+
+        besked_id = next_page['messages'][0]['id']
+        specific_message = service.users().messages().get(userId='me', id=besked_id).execute()
+        print(specific_message['snippet'])
+        # trashing = service.users().messages().trash(userId='me', id=besked_id).execute()
+        # print(f"Trashed message: {trashing}")
+
+
+        # Get historyId
+        # besked = service.users().messages().get(userId='me', id=besked_id, format='full').execute()
+        # start_hist_id = f"{besked['historyId']}"
+        # print(start_hist_id)
+        # request = service.users().history().list(userId='me', startHistoryId=start_hist_id).execute()
+        # print(request)
 
         message_Ids = []
         for i in range(number_of_mails):
             message_Ids.append(str(next_page['messages'][i]['id']))
 
         batch = service.users().messages().batchDelete(userId='me', body={'ids': message_Ids}).execute()
-        request = service.users().history().list(userId='me').execute
-        history = request
-
-
-        ## for at vise alle userIDs
+  
+        # for at vise alle userIDs
         # count = 0
         # for i in range(number_of_mails):
         #     print("{i} user id: ".format(i=i+1) + messages['messages'][i]['id'])
         #     count += 1
         # print(count)
-
 
         # ------ tælle hvor mange sider der er -------
         # main_page = service.users().messages().list(userId='me', q='label:unread', maxResults=500).execute()
