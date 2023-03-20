@@ -41,7 +41,11 @@ def main():
         # for label in request['labels']:
         #     print(label['id'])
 
-        number_of_mails = 100 # max 500
+        number_of_mails = int(input("How many mails should be removed? ")) # max 500
+        while not 0 < number_of_mails <= 500:
+            number_of_mails = int(input("Minimum is 1, and maximum is 500 mails?"))
+        print(f"You are removing {number_of_mails} unread mails from your inbox")
+
         # Makes sure you don't delete new mails
         main_page = service.users().messages().list(userId='me', 
                                                     q='label:unread', 
@@ -54,22 +58,24 @@ def main():
 
         besked_id = next_page['messages'][0]['id']
         specific_message = service.users().messages().get(userId='me', id=besked_id).execute()
-        print(specific_message['snippet'])
+        print(f"Message to remove: {specific_message['snippet']}")
         # trashing = service.users().messages().trash(userId='me', id=besked_id).execute()
         # print(f"Trashed message: {trashing}")
 
 
         # Get historyId
         # besked = service.users().messages().get(userId='me', id=besked_id, format='full').execute()
+        # print(besked)
         # start_hist_id = f"{besked['historyId']}"
         # print(start_hist_id)
-        # request = service.users().history().list(userId='me', startHistoryId=start_hist_id).execute()
+        # request = service.users().history().list(userId='me', startHistoryId=2625661).execute()
         # print(request)
 
         message_Ids = []
         for i in range(number_of_mails):
             message_Ids.append(str(next_page['messages'][i]['id']))
-
+        Body = {'ids': message_Ids}
+        print(Body)
         batch = service.users().messages().batchDelete(userId='me', body={'ids': message_Ids}).execute()
   
         # for at vise alle userIDs
