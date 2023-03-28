@@ -97,7 +97,7 @@ if to_do == "delete emails":
         print("You need to input an integer")
     print(f"You are removing {number_of_mails} mails from your inbox")
 
-    show_labels()
+    show_labels() # lav en dict med mere skrivelige labels som key
     label_to_delete = input("Which label should we take them from? ")
     print(F"Deleting {label_to_delete} emails")
     while number_of_mails > 500:
