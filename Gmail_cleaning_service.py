@@ -49,6 +49,23 @@ def get_unread_emails(service, number_of_mails):
     message_ids = [msg['id'] for msg in next_page['messages']]
     return message_ids
 
+def get_emails(service, number_of_mails, label):
+    """
+    Retrieves the specified number of emails from specified label, 
+    - from the user's inbox using the Gmail API.
+    Returns a list of message IDs.
+    """
+    main_page = service.users().messages().list(userId='me',
+                                                q=f'label:{label}',
+                                                maxResults=number_of_mails).execute()
+    next_page_token = main_page.get('nextPageToken')
+    next_page = service.users().messages().list(userId='me',
+                                                q='label:unread',
+                                                maxResults=number_of_mails,
+                                                pageToken=next_page_token).execute()
+    message_ids = [msg['id'] for msg in next_page['messages']]
+    return message_ids
+
 
 def delete_emails(service, message_ids):
     """
@@ -62,23 +79,45 @@ def delete_emails(service, message_ids):
         print(f"Error deleting messages: {e}")
         return None
 
+def show_labels():
+    request = service.users().labels().list(userId='me').execute()
+    for label in request['labels']:
+        print(label['id'])
 
-def main():
-    creds = get_credentials()
-    service = build('gmail', 'v1', credentials=creds)
+creds = get_credentials()
+service = build('gmail', 'v1', credentials=creds)
 
-    number_of_mails = int(input("How many mails should be removed? ")) # max 500
-    while not 0 < number_of_mails <= 500:
-        number_of_mails = int(input("Minimum is 1, and maximum is 500 mails?"))
-    print(f"You are removing {number_of_mails} unread mails from your inbox")
+to_do = input("What do you want to do? ".lower())
+if to_do == "delete emails":
+    try:
+        number_of_mails = int(input("How many mails should be removed? ")) # max 500/request
+        while 0 > number_of_mails:
+            number_of_mails = int(input("Minimum is 1"))
+    except ValueError:
+        print("You need to input an integer")
+    print(f"You are removing {number_of_mails} mails from your inbox")
 
-    message_ids = get_unread_emails(service, number_of_mails)
-    print(f"Message IDs to delete: {message_ids}")
-
+    show_labels()
+    label_to_delete = input("Which label should we take them from? ")
+    print(F"Deleting {label_to_delete} emails")
+    while number_of_mails > 500:
+        count = 1
+        print(f"Deleting batch number {count}")
+        message_ids = get_emails(service, number_of_mails, label_to_delete)
+        response = delete_emails(service, message_ids)
+        if response:
+            print("Messages deleted: SUCCESS")
+        number_of_mails += -500
+        count += 1
+    message_ids = get_emails(service, number_of_mails, label_to_delete)
     response = delete_emails(service, message_ids)
-    if response:
-        print(f"Messages deleted: {response}")
+    print("All messages deleted: SUCCESS")
+    
+if to_do == "show labels":
+    show_labels()
+
+    
 
 
-if __name__ == '__main__':
-    main()
+
+
